@@ -1,0 +1,145 @@
+syntax = "proto3";
+
+package chord;
+option go_package= "./chord";
+
+// Objetos del Chord
+// Nodo que contiene una ID y una direccion IP.
+message Node {
+    bytes ID = 1;
+    string IP = 2;
+    string port = 3;
+}
+
+
+
+// Las request que pasan un nodo
+message  SetPredecessorRequest{
+    Node predecessor =1 ;
+}
+
+message SetSuccessorRequest{
+    Node successor = 1;
+}
+
+message NotifyRequest{
+    Node notify = 1;
+}
+   //Las respuestas que devuelven un nodo
+message GetPredecessorResponse{
+    Node predecessor =1;
+}
+
+message GetSuccessorResponse{
+    Node successor =1;
+}
+
+message FindSuccesorResponse{
+    Node succesor = 1;
+}
+   // Otras Request
+message FindSuccesorRequest{
+    bytes ID =1;
+}
+
+// Las Request vacias
+message GetPredecessorRequest{}
+message GetSuccessorRequest{}
+message CheckRequest{}
+message PartitionRequest{}
+message ExtendResponse{}
+
+// Las respuestas vacias
+message SetPredecessorResponse{}
+message SetSuccessorResponse{}
+message NotifyResponse{}
+message CheckResponse{}
+
+message DiscardResponse{}
+
+message SetRequest {
+  string ident =1;
+  bytes file =2;
+  bool replication=3;
+}
+message SetResponse {
+  //string response=1;
+}
+
+message GetRequest {
+  string ident=1;
+}
+message GetResponse {
+  bytes responseFile=1;
+}
+message  DeleteRequest {
+  string ident =1;
+  bool replication=2;
+}
+message DeleteResponse {}
+
+message DeleteElemnRequest {
+  string ident=1;
+  repeated string removeFile=2;
+  bool replication=3;
+}
+
+message DeleteElemnResponse {
+  string response =1;
+}
+message SetElemRequest {
+  string ident=1;
+  repeated string setFile=2;
+  bool replication=3;
+}
+
+message SetElemResponse {
+  string response =1;  
+}
+
+// PartitionResponse contains the contains the <key, value> pairs to return.
+message PartitionResponse {
+    map<string, bytes>  inFiles   = 1;
+    map<string, bytes>  outFiles  = 2;
+  }
+
+message ExtendRequest {
+  map<string,bytes> extendFiles =1;
+}
+message DiscardRequest {
+  repeated string discardFiles=1;
+}
+
+service Chord {
+  // GetPredecessor devuelve el nodo que se cree que es el predecesor.
+  rpc GetPredecessor(GetPredecessorRequest) returns (GetPredecessorResponse);
+  // GetSuccessor devuelve el nodo que se cree que es el sucesor.
+  rpc GetSuccessor(GetSuccessorRequest) returns (GetSuccessorResponse);
+  // SetPredecessor encuentra el predecesor para el nodo actual.
+  rpc SetPredecessor(SetPredecessorRequest) returns (SetPredecessorResponse);
+  // SetSuccessor  encuentra el sucesor para el nodo actual.
+  rpc SetSuccessor(SetSuccessorRequest) returns (SetSuccessorResponse);
+  // FindSuccessor encuentra el nodo que sucede a esta ID.
+  rpc FindSuccessor(FindSuccesorRequest) returns (FindSuccesorResponse);
+  // Notify notifica al nodo que puede tener un nuevo sucesor.
+  rpc Notify(NotifyRequest) returns (NotifyResponse);
+  // Check comprueba si el nodo esta vivo.
+  rpc Check(CheckRequest) returns (CheckResponse);
+
+  rpc Partition(PartitionRequest) returns (PartitionResponse);
+
+  rpc Extend(ExtendRequest) returns (ExtendResponse);
+
+  rpc Discard(DiscardRequest) returns (DiscardResponse);
+
+  rpc Set(SetRequest) returns (SetResponse);
+
+  rpc Get(GetRequest) returns (GetResponse);
+
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+
+  rpc DeleteElemn(DeleteElemnRequest) returns (DeleteElemnResponse);
+
+  rpc SetElem(SetElemRequest) returns (SetElemResponse);
+
+}

@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package service;
+option go_package= "./service";
+
+
+// Ficheros Mensajes
+
+message AddFileRequest{
+    string fileName = 1;
+    string fileExtension =2;
+    int32  bytesSize = 3;
+  }
+  
+  message AddFileResponse{
+    string response = 1;
+  }
+
+
+message DeleteFileRequest {
+  repeated string deleteTags=1;
+}
+
+message DeleteFileResponse {
+   string response=1;
+}
+
+message ListFileRequest{
+  repeated string queryTags =1;
+}
+message ListFileResponse {
+  map<string, bytes> Response = 1;
+}
+
+
+message AddTagsRequest {
+  repeated string QueryTags = 1;
+  repeated string AddTags = 2;
+}
+
+message AddTagsResponse {
+  string response =1;
+}
+
+
+message DeleteTagsRequest {
+  repeated string QueryTags = 1;
+  repeated string DeleteTags = 2;
+}
+
+message DeleteTagsResponse {
+  string response =1;
+}
+service Aplication {
+
+rpc AddFile(AddFileRequest) returns (AddFileResponse);
+
+rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+
+rpc ListFile(ListFileRequest) returns (ListFileResponse);
+
+rpc AddTags(AddTagsRequest) returns (AddTagsResponse);
+
+rpc DeleteTags(DeleteTagsResponse) returns (DeleteTagsResponse);
+}
