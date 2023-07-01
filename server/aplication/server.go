@@ -53,4 +53,6 @@ func StartServer(network string, rsaPrivateKeyPath string, rsaPublicteKeyPath st
 	if err != nil {
 		log.Fatalf("No se pudo iniciar el nodo de las etiquetas")
 	}
+
+	go StartTagService("0.0.0.0:50052")
 }

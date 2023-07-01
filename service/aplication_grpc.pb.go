@@ -34,7 +34,7 @@ type AplicationClient interface {
 	DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error)
 	ListFile(ctx context.Context, in *ListFileRequest, opts ...grpc.CallOption) (*ListFileResponse, error)
 	AddTags(ctx context.Context, in *AddTagsRequest, opts ...grpc.CallOption) (*AddTagsResponse, error)
-	DeleteTags(ctx context.Context, in *DeleteTagsResponse, opts ...grpc.CallOption) (*DeleteTagsResponse, error)
+	DeleteTags(ctx context.Context, in *DeleteTagsRequest, opts ...grpc.CallOption) (*DeleteTagsResponse, error)
 }
 
 type aplicationClient struct {
@@ -81,7 +81,7 @@ func (c *aplicationClient) AddTags(ctx context.Context, in *AddTagsRequest, opts
 	return out, nil
 }
 
-func (c *aplicationClient) DeleteTags(ctx context.Context, in *DeleteTagsResponse, opts ...grpc.CallOption) (*DeleteTagsResponse, error) {
+func (c *aplicationClient) DeleteTags(ctx context.Context, in *DeleteTagsRequest, opts ...grpc.CallOption) (*DeleteTagsResponse, error) {
 	out := new(DeleteTagsResponse)
 	err := c.cc.Invoke(ctx, Aplication_DeleteTags_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -98,7 +98,7 @@ type AplicationServer interface {
 	DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error)
 	ListFile(context.Context, *ListFileRequest) (*ListFileResponse, error)
 	AddTags(context.Context, *AddTagsRequest) (*AddTagsResponse, error)
-	DeleteTags(context.Context, *DeleteTagsResponse) (*DeleteTagsResponse, error)
+	DeleteTags(context.Context, *DeleteTagsRequest) (*DeleteTagsResponse, error)
 	mustEmbedUnimplementedAplicationServer()
 }
 
@@ -118,7 +118,7 @@ func (UnimplementedAplicationServer) ListFile(context.Context, *ListFileRequest)
 func (UnimplementedAplicationServer) AddTags(context.Context, *AddTagsRequest) (*AddTagsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTags not implemented")
 }
-func (UnimplementedAplicationServer) DeleteTags(context.Context, *DeleteTagsResponse) (*DeleteTagsResponse, error) {
+func (UnimplementedAplicationServer) DeleteTags(context.Context, *DeleteTagsRequest) (*DeleteTagsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTags not implemented")
 }
 func (UnimplementedAplicationServer) mustEmbedUnimplementedAplicationServer() {}
@@ -207,7 +207,7 @@ func _Aplication_AddTags_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _Aplication_DeleteTags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteTagsResponse)
+	in := new(DeleteTagsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func _Aplication_DeleteTags_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: Aplication_DeleteTags_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AplicationServer).DeleteTags(ctx, req.(*DeleteTagsResponse))
+		return srv.(AplicationServer).DeleteTags(ctx, req.(*DeleteTagsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

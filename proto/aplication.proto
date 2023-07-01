@@ -61,5 +61,5 @@ rpc ListFile(ListFileRequest) returns (ListFileResponse);
 
 rpc AddTags(AddTagsRequest) returns (AddTagsResponse);
 
-rpc DeleteTags(DeleteTagsResponse) returns (DeleteTagsResponse);
+rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse);
 }

@@ -2,11 +2,17 @@ package aplication
 
 import (
 	"context"
+	"net"
 
 	"github.com/alejbv/SistemaFicherosRe/service"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
 )
 
-type aplicationServer struct{}
+type aplicationServer struct {
+	service.UnimplementedAplicationServer
+}
 
 func (apServer *aplicationServer) AddFile(ctx context.Context, req *service.AddFileRequest) (*service.AddFileResponse, error) {
 	/*
@@ -52,4 +58,34 @@ func (apServer *aplicationServer) AddTags(ctx context.Context, req *service.AddT
 
 }
 func (apServer *aplicationServer) DeleteTags(ctx context.Context, req *service.DeleteTagsRequest) (*service.DeleteTagsResponse, error) {
+}
+
+func StartTagService(network, address string) {
+	log.Infof("Group Service Started")
+
+	lis, err := net.Listen(network, address)
+
+	if err != nil {
+		log.Fatalf("Error al levantar el listener: %v", err)
+	}
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				UnaryLoggingInterceptor,
+				UnaryServerInterceptor,
+			),
+		), grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				StreamLoggingInterceptor,
+				StreamServerInterceptor,
+			),
+		),
+	)
+
+	service.RegisterAplicationServer(s, &aplicationServer{})
+
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+
 }
