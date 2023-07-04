@@ -122,19 +122,6 @@ func FileIsThere(path string) bool {
 	return true
 }
 
-func InsertWithOutDuplicates(first, second []string) []string {
-	m := make(map[string]bool)
-
-	for _, v := range first {
-		m[v] = true
-	}
-	for _, v := range second {
-		m[v] = true
-	}
-
-	return Keys(m)
-}
-
 func DeleteElemnts(files, toRemove []string) []string {
 	m := make(map[string]bool)
 	for _, v := range files {

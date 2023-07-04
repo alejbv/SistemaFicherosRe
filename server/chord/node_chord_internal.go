@@ -462,7 +462,7 @@ func (node *Node) FixStorage(key string) {
 		// Bloquea el diccionario para leer de el, lo desbloquea al terminar
 		node.dictLock.RLock()
 		// Consigue el valor asociado a esta llave
-		value, err := node.dictionary.Get(key)
+		value := node.dictionary.Get(key)
 		node.dictLock.RUnlock()
 		if err != nil {
 			/*
@@ -474,7 +474,7 @@ func (node *Node) FixStorage(key string) {
 		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
 		node.dictLock.Lock()
 		// Elimina la etiqueta del almacenamiento local
-		err = node.dictionary.Delete(key)
+		node.dictionary.Delete(key)
 		node.dictLock.Unlock()
 		if err != nil {
 			log.Errorf("Error eliminando la etiqueta %s en el almacenamiento local.\n%s", key, err.Error())
@@ -488,7 +488,7 @@ func (node *Node) FixStorage(key string) {
 			// En caso de error se reinserta este archivo en el almacenamiento para prevenir la perdida de informacion
 			// Se bloquea el almacenamiento para escribir en el, se desbloquea al finalizar
 			node.dictLock.Lock()
-			err = node.dictionary.Set(key, value) //Reinserta el archivo en el almacenamiento local
+			node.dictionary.Set(key, value) //Reinserta el archivo en el almacenamiento local
 			node.dictLock.Unlock()
 			if err != nil {
 				log.Errorf("Error reinsertanto el archivo %s en el almacenamiento local.\n%s", keyNode.IP, err.Error())

@@ -1,17 +1,14 @@
 package aplication
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"log"
 
 	"github.com/alejbv/SistemaFicherosRe/server/chord"
-	"github.com/alejbv/SistemaFicherosRe/server/storage"
 )
 
 var (
-	nodeFile   *chord.Node
-	nodeTag    *chord.Node
+	node       *chord.Node
 	rsaPrivate string
 	rsaPublic  string
 )
@@ -25,31 +22,16 @@ func StartServer(network string, rsaPrivateKeyPath string, rsaPublicteKeyPath st
 	rsaPrivate = rsaPrivateKeyPath
 	rsaPublic = rsaPublicteKeyPath
 
-	//Se crea el almacenamiento para los archivos
-	fileDictionary, _ := storage.NewFileStorage(sha1.New)
-	//Se crea un nodo chord para las etiquetas
-	nodeFile, err = chord.DefaultNode("50050", fileDictionary)
+	//Se crea un nodo chord para los archvios
+	node, err = chord.DefaultNode("50050")
 	if err != nil {
-		log.Fatalf("No se pudo crear el nodo para los archivos")
+		log.Fatalf("No se pudo crear el nodo chord")
 	}
-
-	//Se crea el almacenamiento para los archivos
-	tagDictionary, _ := storage.NewTagStorage(sha1.New)
-	//Se crea un nodo chord para las etiquetas
-	nodeTag, err = chord.DefaultNode("50051", tagDictionary)
-	if err != nil {
-		log.Fatalf("No se pudo crear el nodo para las etiquetas")
-	}
-	err = nodeFile.Start()
+	err = node.Start()
 
 	if err != nil {
-		log.Fatalf("No se pudo iniciar el nodo de los archivos")
+		log.Fatalf("No se pudo iniciar el nodo de chord")
 	}
 
-	err = nodeTag.Start()
-	if err != nil {
-		log.Fatalf("No se pudo iniciar el nodo de las etiquetas")
-	}
-
-	go StartTagService("tcp", "0.0.0.0:50052")
+	go StartTagService("tcp", "0.0.0.0:50051")
 }

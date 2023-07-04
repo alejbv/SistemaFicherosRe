@@ -65,11 +65,10 @@ func NewNode(port string, configuration *Configuration, transport RemoteServices
 }
 
 // DefaultNode crea y devuelve un nuevo nodo con una configuracion por defecto.
-func DefaultNode(port string, dictionary storage.Storage) (*Node, error) {
-	conf := DefaultConfig() // Crea una configuracion por defecto.
-	transport := NewGRPCServices(conf)
-	//path := "/usr/app/server/data/" // Crea un objeto RPC por defecto  para interactuar con la capa de transporte.
-	//dictionary := storage.Storage(conf.Hash, path) // Crea un diccionario por defecto.
+func DefaultNode(port string) (*Node, error) {
+	conf := DefaultConfig()                         // Crea una configuracion por defecto.
+	transport := NewGRPCServices(conf)              // Crea un objeto RPC por defecto  para interactuar con la capa de transporte.
+	dictionary := storage.NewFileStorage(conf.Hash) // Crea un diccionario por defecto.
 
 	// Devuelve el nodo creado.
 	return NewNode(port, conf, transport, dictionary)
@@ -208,11 +207,11 @@ func (node *Node) Check(ctx context.Context, req *chord.CheckRequest) (*chord.Ch
 //Ok
 // Añade un archivo al almacenamiento local del nodo correspondiente
 func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetResponse, error) {
-	log.Infof("Set: key=%s.", req.Ident)
+	log.Infof("Set: llave=%s.", req.Ident)
 	// Obtenemos el sucesor del nodo actual
 	successor, err := node.LocateKey(req.Ident)
 	if err != nil {
-		log.Error("Error getting key." + err.Error())
+		log.Errorf("Error encontrando el nodo correspondiente a el identificador %s.%s", req.Ident, err.Error())
 		return &chord.SetResponse{}, err
 	}
 
@@ -221,13 +220,9 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 
 		//Se bloque el diccionario para escribir en el
 		node.dictLock.Lock()
-		err := node.dictionary.Set(req.Ident, req.File)
+		node.dictionary.Set(req.Ident, req.File)
 		//Se desbloquea al terminar de escribir en el
 		node.dictLock.Unlock()
-		if err != nil {
-			log.Error("Error getting value." + err.Error())
-			return &chord.SetResponse{}, err
-		}
 		if req.Replication {
 			log.Info("Resolviendo la request Set localmente (replicacion).")
 		} else {
@@ -258,26 +253,20 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 
 //Ok
 func (node *Node) Get(ctx context.Context, req *chord.GetRequest) (*chord.GetResponse, error) {
-	log.Infof("Get: key=%s.", req.Ident)
+	log.Infof("Get: llave=%s.", req.Ident)
 	// Obtenemos el sucesor del nodo actual
 	successor, err := node.LocateKey(req.Ident)
 	if err != nil {
-		log.Error("Error getting key." + err.Error())
+		log.Errorf("Error encontrando el nodo correspondiente a el identificador %s.%s", req.Ident, err.Error())
 		return &chord.GetResponse{}, err
 	}
 
 	// Si el sucesor es igual al nodo actual, entonces el valor que se quiere es local,
 	// por lo que se recupera del diccionario y se devuelve
 	if Equals(successor.ID, node.ID) {
-
 		node.dictLock.Lock()
-		value, err := node.dictionary.Get(req.Ident)
+		value := node.dictionary.Get(req.Ident)
 		node.dictLock.Unlock()
-		if err != nil {
-			log.Error("Error getting value." + err.Error())
-			return &chord.GetResponse{}, err
-		}
-
 		return &chord.GetResponse{ResponseFile: value}, nil
 	}
 
@@ -288,11 +277,11 @@ func (node *Node) Get(ctx context.Context, req *chord.GetRequest) (*chord.GetRes
 //Ok
 // Elimina un fichero del almacenamiento
 func (node *Node) Delete(ctx context.Context, req *chord.DeleteRequest) (*chord.DeleteResponse, error) {
-	log.Infof("Eliminar: key=%s.", req.Ident)
+	log.Infof("Eliminar: llave=%s.", req.Ident)
 	// Obtenemos el sucesor del nodo actual
 	successor, err := node.LocateKey(req.Ident)
 	if err != nil {
-		log.Error("Error getting key." + err.Error())
+		log.Errorf("Error encontrando el nodo correspondiente a el identificador %s.%s", req.Ident, err.Error())
 		return &chord.DeleteResponse{}, err
 	}
 
@@ -300,12 +289,8 @@ func (node *Node) Delete(ctx context.Context, req *chord.DeleteRequest) (*chord.
 	if Equals(successor.ID, node.ID) || req.Replication {
 
 		node.dictLock.Lock()
-		err := node.dictionary.Delete(req.Ident)
+		node.dictionary.Delete(req.Ident)
 		node.dictLock.Unlock()
-		if err != nil {
-			log.Error("Error getting value." + err.Error())
-			return &chord.DeleteResponse{}, err
-		}
 		if req.Replication {
 			log.Info("Resolviendo la request Delete localmente (replicacion).")
 		} else {
@@ -400,98 +385,4 @@ func (node *Node) Discard(ctx context.Context, req *chord.DiscardRequest) (*chor
 		return &chord.DiscardResponse{}, errors.New("error descartando las llaves del diccionario de almacenamiento\n" + err.Error())
 	}
 	return &chord.DiscardResponse{}, nil
-}
-
-// Estos dos ultimos metodos se deben revisar, lo mas probable es que sean innecesarios
-// Ok
-// Elimina la informacion referente a un archivo de una etiqueta
-func (node *Node) DeleteElemn(ctx context.Context, req *chord.DeleteElemnRequest) (*chord.DeleteElemnResponse, error) {
-	log.Infof("Eliminando de key=%s los elementos %s", req.Ident, req.RemoveFile)
-	// Obtenemos el sucesor del nodo actual
-	successor, err := node.LocateKey(req.Ident)
-	if err != nil {
-		log.Error("Error eliminando los valores." + err.Error())
-		return &chord.DeleteElemnResponse{}, err
-	}
-
-	// Si el sucesor es igual al nodo actual o es una replicas, entonces tenemos el valor
-	if Equals(successor.ID, node.ID) || req.Replication {
-		err := node.dictionary.DeleteElemn(req.Ident, req.RemoveFile)
-		if err != nil {
-			log.Error("Error eliminando los valores." + err.Error())
-			return &chord.DeleteElemnResponse{}, err
-		}
-		if req.Replication {
-			log.Info("Resolviendo la request DeleteElemn localmente (replicacion).")
-		} else {
-			// Se bloquea el sucesosr para leer de el, se desbloquea al terminar
-			node.sucLock.RLock()
-			suc := node.successors.Beg()
-			node.sucLock.RUnlock()
-			// Si el sucesor es distinto a este nodo, se replica la request
-			if !Equals(suc.ID, node.ID) {
-				go func() {
-					req.Replication = true
-					log.Infof("Replicando la request DeleteElemn a %s", suc.IP)
-					err := node.RPC.DeleteElemn(suc, req)
-					if err != nil {
-						log.Errorf("Error replicando la request %s.\n%s", suc.IP, err.Error())
-					}
-				}()
-			}
-		}
-
-		log.Info("Se resolvio la request DeleteElemn de forma exitosa ")
-		return &chord.DeleteElemnResponse{}, nil
-	}
-
-	// Si el sucesor es diferente del nodo actual, reenviamos la solicitud al sucesor
-	return &chord.DeleteElemnResponse{}, node.RPC.DeleteElemn(successor, req)
-
-}
-
-//Ok
-func (node *Node) SetElemn(ctx context.Context, req *chord.SetElemRequest) error {
-	log.Infof("Almacenando en key=%s los archivos=%s", req.Ident, req.SetFile)
-	// Obtenemos el sucesor del nodo actual
-	successor, err := node.LocateKey(req.Ident)
-	if err != nil {
-		log.Error("Error getting key." + err.Error())
-		return err
-	}
-
-	// Si el sucesor es igual al nodo actual o es una replicas, entonces tenemos el valor
-	if Equals(successor.ID, node.ID) || req.Replication {
-		err := node.dictionary.SetElem(req.Ident, req.SetFile)
-		if err != nil {
-			log.Error("Error almacenando el valor." + err.Error())
-			return err
-		}
-		if req.Replication {
-			log.Info("Resolviendo la request SetElemn localmente (replicacion).")
-		} else {
-			// Se bloquea el sucesosr para leer de el, se desbloquea al terminar
-			node.sucLock.RLock()
-			suc := node.successors.Beg()
-			node.sucLock.RUnlock()
-			// Si el sucesor es distinto a este nodo, se replica la request
-			if !Equals(suc.ID, node.ID) {
-				go func() {
-					req.Replication = true
-					log.Info("Replicando la request SetElemn a %s.", suc.IP)
-					err := node.RPC.SetElemn(suc, req)
-					if err != nil {
-						log.Errorf("Error replicando la request %s.\n%s", suc.IP, err.Error())
-					}
-				}()
-			}
-		}
-
-		log.Info("Se resolvio la request SetElemn de forma exitosa ")
-		return nil
-	}
-
-	// Si el sucesor es diferente del nodo actual, reenviamos la solicitud al sucesor
-	return node.RPC.SetElemn(successor, req)
-
 }
