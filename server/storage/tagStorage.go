@@ -6,6 +6,7 @@ import (
 	"hash"
 
 	"github.com/alejbv/SistemaFicherosRe/server/utils"
+	log "github.com/sirupsen/logrus"
 )
 
 type tagStorage struct {
@@ -20,7 +21,26 @@ func NewTagStorage(hash func() hash.Hash) (*tagStorage, error) {
 	}, nil
 }
 func (storage *tagStorage) Set(key string, file []byte) error {
-	storage.data[key] = file
+	// Variable local que va a almacenar todos los archivos que tiene la etiqueta en key
+	var tempStorage []string
+	// Se comprueba si esta el valor de la etiqueta. De no estar se crea un nuevo arreglo con un
+	// unico elemento, el nuevo y se lleva a binario para luego almacenarlo
+	if val, ok := storage.data[key]; !ok {
+		tempStorage = append(tempStorage, string(file))
+		toBytes, err := json.Marshal(&tempStorage)
+		if err != nil {
+			log.Errorf("No se pudo almacenar el archvio: %s. %s", string(file), err.Error())
+			return err
+		}
+		storage.data[key] = toBytes
+		// De existir esa etiqueta se almacena temporalmente todos los archivos que tienene y se agrega el nuevo
+		// siempre que no hayan duplicados
+	} else {
+		json.Unmarshal(val, &tempStorage)
+		result := utils.InsertWithOutDuplicates(tempStorage, []string{string(file)})
+		toBytes, _ := json.Marshal(&result)
+		storage.data[key] = toBytes
+	}
 	return nil
 }
 func (storage *tagStorage) Get(key string) ([]byte, error) {

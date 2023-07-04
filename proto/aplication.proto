@@ -5,11 +5,12 @@ option go_package= "./service";
 
 
 // Ficheros Mensajes
-
 message AddFileRequest{
     string fileName = 1;
     string fileExtension =2;
-    int32  bytesSize = 3;
+    bytes  infoToStorage=3;
+    int32  bytesSize = 4;
+    repeated string tags=5;
   }
   
   message AddFileResponse{

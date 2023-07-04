@@ -179,7 +179,6 @@ func (node *Node) Notify(ctx context.Context, req *chord.NotifyRequest) (*chord.
 	node.predLock.RLock()
 	pred := node.predecessor
 	node.predLock.RUnlock()
-
 	/*
 
 		Si este nodo no tiene predecesor o el candidato a predecesor esta más cerca a este
@@ -219,7 +218,12 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 
 	// Si el sucesor es igual al nodo actual o es una replicas, entonces tenemos el valor
 	if Equals(successor.ID, node.ID) || req.Replication {
+
+		//Se bloque el diccionario para escribir en el
+		node.dictLock.Lock()
 		err := node.dictionary.Set(req.Ident, req.File)
+		//Se desbloquea al terminar de escribir en el
+		node.dictLock.Unlock()
 		if err != nil {
 			log.Error("Error getting value." + err.Error())
 			return &chord.SetResponse{}, err
@@ -227,7 +231,7 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 		if req.Replication {
 			log.Info("Resolviendo la request Set localmente (replicacion).")
 		} else {
-			// Se bloquea el sucesosr para leer de el, se desbloquea al terminar
+			// Se bloquea el sucesor para leer de el, se desbloquea al terminar
 			node.sucLock.RLock()
 			suc := node.successors.Beg()
 			node.sucLock.RUnlock()
@@ -235,7 +239,7 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 			if !Equals(suc.ID, node.ID) {
 				go func() {
 					req.Replication = true
-					log.Info("Replicando la request Set a %s.", suc.IP)
+					log.Infof("Replicando la request Set a %s.", suc.IP)
 					err := node.RPC.Set(suc, req)
 					if err != nil {
 						log.Errorf("Error replicando la request %s.\n%s", suc.IP, err.Error())
@@ -250,7 +254,6 @@ func (node *Node) Set(ctx context.Context, req *chord.SetRequest) (*chord.SetRes
 
 	// Si el sucesor es diferente del nodo actual, reenviamos la solicitud al sucesor
 	return &chord.SetResponse{}, node.RPC.Set(successor, req)
-
 }
 
 //Ok
@@ -263,9 +266,13 @@ func (node *Node) Get(ctx context.Context, req *chord.GetRequest) (*chord.GetRes
 		return &chord.GetResponse{}, err
 	}
 
-	// Si el sucesor es igual al nodo actual, entonces tenemos el valor
+	// Si el sucesor es igual al nodo actual, entonces el valor que se quiere es local,
+	// por lo que se recupera del diccionario y se devuelve
 	if Equals(successor.ID, node.ID) {
+
+		node.dictLock.Lock()
 		value, err := node.dictionary.Get(req.Ident)
+		node.dictLock.Unlock()
 		if err != nil {
 			log.Error("Error getting value." + err.Error())
 			return &chord.GetResponse{}, err
@@ -274,7 +281,7 @@ func (node *Node) Get(ctx context.Context, req *chord.GetRequest) (*chord.GetRes
 		return &chord.GetResponse{ResponseFile: value}, nil
 	}
 
-	// Si el sucesor es diferente del nodo actual, reenviamos la solicitud al sucesor
+	// Si el sucesor es diferente del nodo actual,no es local. Por lo que se reenvia la solicitud al sucesor
 	return node.RPC.Get(successor, req)
 }
 
@@ -291,7 +298,10 @@ func (node *Node) Delete(ctx context.Context, req *chord.DeleteRequest) (*chord.
 
 	// Si el sucesor es igual al nodo actual o es una replicas, entonces tenemos el valor
 	if Equals(successor.ID, node.ID) || req.Replication {
+
+		node.dictLock.Lock()
 		err := node.dictionary.Delete(req.Ident)
+		node.dictLock.Unlock()
 		if err != nil {
 			log.Error("Error getting value." + err.Error())
 			return &chord.DeleteResponse{}, err
@@ -307,7 +317,7 @@ func (node *Node) Delete(ctx context.Context, req *chord.DeleteRequest) (*chord.
 			if !Equals(suc.ID, node.ID) {
 				go func() {
 					req.Replication = true
-					log.Info("Replicando la request Delete a %s.", suc.IP)
+					log.Infof("Replicando la request Delete a %s.", suc.IP)
 					err := node.RPC.Delete(suc, req)
 					if err != nil {
 						log.Errorf("Error replicando la request %s.\n%s", suc.IP, err.Error())
@@ -353,6 +363,11 @@ func (node *Node) Partition(ctx context.Context, req *chord.PartitionRequest) (*
 // Ok
 // Extend agrega al diccionario local un nuevo conjunto de pares<key, values> .
 func (node *Node) Extend(ctx context.Context, req *chord.ExtendRequest) (*chord.ExtendResponse, error) {
+	// Si no hay llaves que agregar, regresa.
+	if req.ExtendFiles == nil || len(req.ExtendFiles) == 0 {
+		return &chord.ExtendResponse{}, nil
+	}
+
 	log.Info("Agregando nuevos elementos al almacenamiento local.")
 
 	// Bloquea el diccionario para escribir en el , al terminar se desbloquea
@@ -387,6 +402,7 @@ func (node *Node) Discard(ctx context.Context, req *chord.DiscardRequest) (*chor
 	return &chord.DiscardResponse{}, nil
 }
 
+// Estos dos ultimos metodos se deben revisar, lo mas probable es que sean innecesarios
 // Ok
 // Elimina la informacion referente a un archivo de una etiqueta
 func (node *Node) DeleteElemn(ctx context.Context, req *chord.DeleteElemnRequest) (*chord.DeleteElemnResponse, error) {
@@ -416,7 +432,7 @@ func (node *Node) DeleteElemn(ctx context.Context, req *chord.DeleteElemnRequest
 			if !Equals(suc.ID, node.ID) {
 				go func() {
 					req.Replication = true
-					log.Info("Replicando la request DeleteElemn a %s.", suc.IP)
+					log.Infof("Replicando la request DeleteElemn a %s", suc.IP)
 					err := node.RPC.DeleteElemn(suc, req)
 					if err != nil {
 						log.Errorf("Error replicando la request %s.\n%s", suc.IP, err.Error())
@@ -434,6 +450,7 @@ func (node *Node) DeleteElemn(ctx context.Context, req *chord.DeleteElemnRequest
 
 }
 
+//Ok
 func (node *Node) SetElemn(ctx context.Context, req *chord.SetElemRequest) error {
 	log.Infof("Almacenando en key=%s los archivos=%s", req.Ident, req.SetFile)
 	// Obtenemos el sucesor del nodo actual

@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -171,6 +172,48 @@ func (node *Node) Listen() {
 		log.Errorf("No se puede dar el servicio en  %s.\n%s", node.IP, err.Error())
 		return
 	}
+}
+
+// GetKey recupera el valor asociado a  una clave
+func (node *Node) GetKey(key string) ([]byte, error) {
+	// Se obtiene el contexto de la conexion y se  establece el tiempo de espera de la conexio.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolving get request.")
+
+	response, err := node.Get(ctx, &chord.GetRequest{Ident: key})
+	if err != nil {
+		return nil, err
+	}
+
+	return response.ResponseFile, nil
+}
+
+// SetKey almacena un par (llave,valory) a <key, value> pair on storage.
+func (node *Node) SetKey(key string, req *chord.SetRequest) error {
+	// Obtain the context of the connection and set the timeout of the request.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolving set request.")
+
+	_, err := node.Set(ctx, req)
+
+	return err
+}
+
+// DeleteKey elimina un par (llave,valor) del almacenamiento
+func (node *Node) DeleteKey(key string) error {
+	// Se obtiene el contexto de la conexion y se  establece el tiempo de espera de la conexio.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolving delete request.")
+
+	_, err := node.Delete(ctx, &chord.DeleteRequest{Ident: key, Replication: false})
+
+	return err
 }
 
 /*
