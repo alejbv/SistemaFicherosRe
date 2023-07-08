@@ -13,13 +13,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func CreateFileIdentifier(req *service.AddFileRequest) (string, *protoChord.SetRequest) {
+func ProcessFile(req *service.AddFileRequest) (string, *protoChord.SetRequest) {
 	// Se quiere obtener el tiempo actual para tenerlo en cuenta a la hora de hacer el identificador
 	uploadDate := time.Now().String()
 
-	//Se crea el identificador
-	ident := fmt.Sprintf("File.%s%s%s%d%s", req.FileName, req.FileExtension, uploadDate, string(req.BytesSize), string(req.InfoToStorage))
-	// El pbjetivo es serializar la informacion a almancer. Para eso primero se lleva a un formato en especifico de json
+	//Se crea el identificador usando la informacion propia del archivo y la fecha de subida al servidor
+	ident := fmt.Sprintf("File.%s%s%s%s%s", req.FileName, req.FileExtension, uploadDate, string(req.BytesSize), string(req.InfoToStorage))
+	// El objetivo es serializar la informacion a almancer. Para eso primero se lleva a un formato en especifico de json
 	// para luego llevarlo a bytes
 	fileInfo := &storage.FileEncoding{
 		FileName:      req.FileName,
@@ -43,8 +43,8 @@ func CreateTagIdentifier(tag string) string {
 	return fmt.Sprintf("Tag.%s", tag)
 }
 
-// Funcion para manegar la adiccion de una etiqueta a un nodo chord
-func ManageTagAdd(node *serverChord.Node, tag, fileIdent string) (*protoChord.SetRequest, error) {
+// Metodo para manegar la adiccion de una etiqueta a un nodo chord
+func ManageTagAdd(node *serverChord.Node, tag string, fileIdent []string) (*protoChord.SetRequest, error) {
 	/*
 		Cuando se agrega un nuevo archivo al servicio Chord tambien se debe almacenar la informacion de la
 		etiqueta, guardandose que una determinada etiqueta referencia a un archivo, Pero en esa operacion
@@ -70,7 +70,7 @@ func ManageTagAdd(node *serverChord.Node, tag, fileIdent string) (*protoChord.Se
 		json.Unmarshal(file, &tagInfo)
 	}
 	// Se inserta la nueva informacion y luego se codifica a bytes
-	newFileInfo := InsertWithOutDuplicates(tagInfo, []string{fileIdent})
+	newFileInfo := InsertWithOutDuplicates(tagInfo, fileIdent)
 	newCodeInfo, _ := json.Marshal(&newFileInfo)
 	return &protoChord.SetRequest{
 		Ident:       tagIdent,
@@ -79,6 +79,7 @@ func ManageTagAdd(node *serverChord.Node, tag, fileIdent string) (*protoChord.Se
 	}, nil
 }
 
+// Metodo para recuperar todos los archivos
 func QueryTags(node *serverChord.Node, queryTags []string) (map[string][]string, map[string][]string, error) {
 	// Se crea un diccionario que va a tener las etiquetas mapeando a todos los archivos que almacena
 	tagsMap := make(map[string][]string)
@@ -86,7 +87,6 @@ func QueryTags(node *serverChord.Node, queryTags []string) (map[string][]string,
 	filesMap := make(map[string][]string)
 	// Slice temporal para deserializar la informacion
 	var temp []string
-
 	// Se recorre todas las etiquetas
 	for _, tag := range queryTags {
 		tagIdent := CreateTagIdentifier(tag)
@@ -97,7 +97,7 @@ func QueryTags(node *serverChord.Node, queryTags []string) (map[string][]string,
 		}
 		// Se deserializa la informacion
 		json.Unmarshal(val, &temp)
-		// Se almacena para etiqueta actual su informacion relevanto
+		// Se almacena para etiqueta actual su informacion relevante
 		tagsMap[tag] = temp
 		// Se va a recorrer cada uno de los archivos de la etiqueta actual
 		for _, file := range temp {
@@ -113,12 +113,16 @@ func QueryTags(node *serverChord.Node, queryTags []string) (map[string][]string,
 	return tagsMap, filesMap, nil
 }
 
-func Equals(first, second []string) bool {
+// Metodo para comprobar si dos listas de strings son iguales
+func Contains(first, second []string) bool {
 	m := make(map[string]bool)
+
+	// Se añaden todos los elementos de la primera lista al mapa
 	for _, elem := range first {
 		m[elem] = true
 	}
-
+	// Para que las dos listas sean iguales todos los elementos de la segunda deben estar en el mapa.
+	// Si hay al menos un elemento de second que no este en m, entonces no son iguales
 	for _, elem := range second {
 		if _, ok := m[elem]; !ok {
 			return false
@@ -127,6 +131,7 @@ func Equals(first, second []string) bool {
 	return true
 }
 
+// Metodo para eliminar de una lista de string un subconjunto de esta
 func DeleteElem(elemList, elemDeletes []string) []string {
 	m := make(map[string]bool)
 	for _, elem := range elemList {

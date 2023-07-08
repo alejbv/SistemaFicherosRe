@@ -180,7 +180,7 @@ func (node *Node) GetKey(key string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
 	defer cancel()
 
-	log.Info("Resolving get request.")
+	log.Info("Recuperando informacion de un archivo.")
 
 	response, err := node.Get(ctx, &chord.GetRequest{Ident: key})
 	if err != nil {
@@ -190,13 +190,13 @@ func (node *Node) GetKey(key string) ([]byte, error) {
 	return response.ResponseFile, nil
 }
 
-// SetKey almacena un par (llave,valory) a <key, value> pair on storage.
+// SetKey almacena un par (llave,valor) en el almacenamiento.
 func (node *Node) SetKey(key string, req *chord.SetRequest) error {
-	// Obtain the context of the connection and set the timeout of the request.
+	// Obtiene el contexto de la conexion y establece el tiempo de espera de la request.
 	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
 	defer cancel()
 
-	log.Info("Resolving set request.")
+	log.Info("Almacenando un nuevo archivo.")
 
 	_, err := node.Set(ctx, req)
 
@@ -205,11 +205,11 @@ func (node *Node) SetKey(key string, req *chord.SetRequest) error {
 
 // DeleteKey elimina un par (llave,valor) del almacenamiento
 func (node *Node) DeleteKey(key string) error {
-	// Se obtiene el contexto de la conexion y se  establece el tiempo de espera de la conexio.
+	// Se obtiene el contexto de la conexion y se  establece el tiempo de espera de la request.
 	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
 	defer cancel()
 
-	log.Info("Resolving delete request.")
+	log.Info("Eliminando un archivo del almacenamiento.")
 
 	_, err := node.Delete(ctx, &chord.DeleteRequest{Ident: key, Replication: false})
 
