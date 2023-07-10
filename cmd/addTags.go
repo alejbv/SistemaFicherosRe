@@ -20,7 +20,7 @@ var addTagsCmd = &cobra.Command{
 	los archivos del sistema que son representados por esta y le agregan las etiquetas de la segunda lista`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("addTags llamado")
-		chordClient, conn, err := client.StartClient()
+		apliClient, conn, err := client.StartClient()
 		defer conn.Close()
 		if err != nil {
 			fmt.Println("Error creando la conexion: no se pudo encontrar un servidor" + err.Error())
@@ -28,7 +28,7 @@ var addTagsCmd = &cobra.Command{
 		}
 		queryTags := strings.Split(args[0], "-")
 		addTags := strings.Split(args[1], "-")
-		err = client.ClientAddTags(chordClient, queryTags, addTags)
+		err = client.ClientAddTags(apliClient, queryTags, addTags)
 		if err != nil {
 
 			fmt.Println("Hubo un error mientras se ejecutaba el comando addTags")

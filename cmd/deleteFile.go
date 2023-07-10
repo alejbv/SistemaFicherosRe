@@ -20,10 +20,10 @@ var deleteFileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deleteFile llamado")
 
-		chordClient, conn, _ := client.StartClient()
+		apliClient, conn, _ := client.StartClient()
 		defer conn.Close()
 
-		err := client.ClientDeleteFile(chordClient, args)
+		err := client.ClientDeleteFile(apliClient, args)
 		if err != nil {
 
 			fmt.Println("Hubo un error mientras se ejecutaba el comando deleteFile")

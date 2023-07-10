@@ -77,13 +77,13 @@ func ClientListFiles(client service.AplicationClient, tags []string) error {
 	info := res.Response
 
 	// Imprimir encabezado de la tabla
-	log.Printf("| %10s | %10s | %10s | %10s | %10s |\n", "Nombre del Archivo", "Extension ", "Tamaño", "Fecha de Subida", "Etiquetas")
+	log.Printf("| %10s | %10s | %10d | %10s | %10s |\n", "Nombre del Archivo", "Extension ", "Tamaño", "Fecha de Subida", "Etiquetas")
 	log.Println("-----------------------------------------")
 	// Imprimir datos de la tabla
 	for _, value := range info {
 		var fileDecod storage.FileEncoding
 		json.Unmarshal(value, &fileDecod)
-		log.Printf("| %10s | %10s | %10s | %10s | %10s |\n", fileDecod.FileName, fileDecod.FileExtension, fileDecod.Size, fileDecod.UploadDate, fileDecod.Tags)
+		log.Printf("| %10s | %10s | %10d | %10s | %10s |\n", fileDecod.FileName, fileDecod.FileExtension, fileDecod.Size, fileDecod.UploadDate, fileDecod.Tags)
 	}
 
 	return nil

@@ -26,7 +26,7 @@ func (node *Node) Stabilize() {
 
 	// Si el sucesor es este nodo, no hay nada que estabilizar.
 	if Equals(suc.ID, node.ID) {
-		log.Info("No es necesario estabilizar")
+		log.Debug("No es necesario estabilizar")
 		return
 	}
 
@@ -40,7 +40,8 @@ func (node *Node) Stabilize() {
 		sucesor de este nodo con el candidato
 	*/
 	//Equals(node.ID, candidate.ID) || Between(candidate.ID, node.ID, suc.ID)
-	if !Equals(node.ID, candidate.ID) && Between(candidate.ID, node.ID, suc.ID) {
+	// /!Equals(node.ID, candidate.ID) && Between(candidate.ID, node.ID, suc.ID)
+	if Equals(node.ID, candidate.ID) || Between(candidate.ID, node.ID, suc.ID) {
 		log.Info("Sucesor actualizado al nodo en " + candidate.IP + ".")
 		// Bloquea el sucesor para escribir en el, se desbloquea el finalizar
 		node.sucLock.Lock()

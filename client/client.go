@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alejbv/SistemaDeFicherosDistribuido/chord"
+	"github.com/alejbv/SistemaFicherosRe/service"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -115,7 +115,7 @@ func GetOutboundIP() net.IP {
 	return localAddr.IP
 }
 
-func StartClient() (chord.ChordClient, *grpc.ClientConn, error) {
+func StartClient() (service.AplicationClient, *grpc.ClientConn, error) {
 
 	// Obtiene la IP del cliente en la red
 	ip := GetOutboundIP()
@@ -123,7 +123,7 @@ func StartClient() (chord.ChordClient, *grpc.ClientConn, error) {
 	addr := ip.String()
 	log.Infof("Dirección IP del cliente en la red %s.", addr)
 	addres, err := NetDiscover(ip)
-	addres += ":50050"
+	addres += ":50051"
 
 	if err != nil {
 		log.Errorln("Hubo problemas encontrando un servidor al que conectarse")
@@ -138,7 +138,7 @@ func StartClient() (chord.ChordClient, *grpc.ClientConn, error) {
 	}
 
 	//defer conn.Close()
-	client := chord.NewChordClient(conn)
+	client := service.NewAplicationClient(conn)
 	fmt.Printf("El cliente es: %v", client)
 	return client, conn, nil
 
