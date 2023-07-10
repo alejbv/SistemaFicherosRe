@@ -170,7 +170,7 @@ func (node *Node) FindSuccessor(ctx context.Context, req *chord.FindSuccesorRequ
 //OK
 // Notify notifica a este nodo que es posible que tenga un nuevo predecesor.
 func (node *Node) Notify(ctx context.Context, req *chord.NotifyRequest) (*chord.NotifyResponse, error) {
-	log.Info("Comprobando la notificacion de predecesor.")
+	log.Trace("Comprobando la notificacion de predecesor.")
 
 	candidate := req.Notify
 

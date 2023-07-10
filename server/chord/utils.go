@@ -93,16 +93,29 @@ func KeyBetween(key string, hash func() hash.Hash, L, R []byte) (bool, error) {
 
 // Between comprueba si una ID esta dentro del intervalo (L,R),en el anillo chord.
 func Between(ID, L, R []byte) bool {
-	// Si L <= R, devuelve true si L < ID < R.
-	if bytes.Compare(L, R) <= 0 {
-		return bytes.Compare(L, ID) < 0 && bytes.Compare(ID, R) < 0
-	}
+	/*
+		// Si L <= R, devuelve true si L < ID < R.
+		if bytes.Compare(L, R) <= 0 {
+			return bytes.Compare(L, ID) < 0 && bytes.Compare(ID, R) < 0
+		}
 
-	// Si L > R, es un segmento sobre el final del anillo.
-	// Entonces, ID esta entre L y R si L < ID o ID < R.
-	return bytes.Compare(L, ID) < 0 || bytes.Compare(ID, R) < 0
+		// Si L > R, es un segmento sobre el final del anillo.
+		// Entonces, ID esta entre L y R si L < ID o ID < R.
+		return bytes.Compare(L, ID) < 0 || bytes.Compare(ID, R) < 0
+	*/
+	return between(ID, L, R) || bytes.Equal(ID, R)
 }
-
+func between(key, a, b []byte) bool {
+	switch bytes.Compare(a, b) {
+	case 1:
+		return bytes.Compare(a, key) == -1 || bytes.Compare(b, key) >= 0
+	case -1:
+		return bytes.Compare(a, key) == -1 && bytes.Compare(b, key) >= 0
+	case 0:
+		return bytes.Compare(a, key) != 0
+	}
+	return false
+}
 func HashKey(key string, hash func() hash.Hash) ([]byte, error) {
 	log.Trace("Obteniendo el hash de la llave: " + key + ".\n")
 	h := hash()

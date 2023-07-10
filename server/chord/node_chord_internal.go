@@ -41,7 +41,7 @@ func (node *Node) Stabilize() {
 	*/
 	//Equals(node.ID, candidate.ID) || Between(candidate.ID, node.ID, suc.ID)
 	// /!Equals(node.ID, candidate.ID) && Between(candidate.ID, node.ID, suc.ID)
-	if Equals(node.ID, candidate.ID) || Between(candidate.ID, node.ID, suc.ID) {
+	if Between(candidate.ID, node.ID, suc.ID) {
 		log.Info("Sucesor actualizado al nodo en " + candidate.IP + ".")
 		// Bloquea el sucesor para escribir en el, se desbloquea el finalizar
 		node.sucLock.Lock()
