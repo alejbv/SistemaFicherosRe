@@ -55,10 +55,10 @@ func (node *Node) Start() error {
 
 	node.successors = NewQueue[chord.Node](node.config.StabilizingNodes) // Se crea la cola de sucesores.
 	node.successors.PushBack(node.Node)                                  // Se establece a este nodo como su propio sucesor.
-	node.predecessor = node.Node                                         // Se establece este nodo como su propio predecesor.
-	node.fingerTable = NewFingerTable(node.config.HashSize)              // Se crea la finger table.
-	node.server = grpc.NewServer(node.config.ServerOpts...)              // Se establece  el nodo como un servidor.
-	node.sock = listener.(*net.TCPListener)                              // Se almacena el socket.
+	//node.predecessor = node.Node                                         // Se establece este nodo como su propio predecesor.
+	node.fingerTable = NewFingerTable(node.config.HashSize) // Se crea la finger table.
+	node.server = grpc.NewServer(node.config.ServerOpts...) // Se establece  el nodo como un servidor.
+	node.sock = listener.(*net.TCPListener)                 // Se almacena el socket.
 	if err != nil {
 		log.Errorf("Error iniciando el servidor: el diccionario no es valido.")
 		return errors.New("error iniciando el servidor: el diccionario no es valido\n" + err.Error())
