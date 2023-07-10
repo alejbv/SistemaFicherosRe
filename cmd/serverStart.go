@@ -7,8 +7,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/alejbv/SistemaDeFicherosDistribuido/server/logging"
-	"github.com/alejbv/SistemaDeFicherosDistribuido/server/services"
+	"github.com/alejbv/SistemaFicherosRe/server/aplication"
+	"github.com/alejbv/SistemaFicherosRe/server/logging"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -25,7 +25,7 @@ var serverStartCmd = &cobra.Command{
 		rsaPrivateKeyPath := "pv.pem"
 		rsaPublicteKeyPath := "pub.pem"
 		network := "tcp"
-		services.StartServer(network, rsaPrivateKeyPath, rsaPublicteKeyPath)
+		aplication.StartServer(network, rsaPrivateKeyPath, rsaPublicteKeyPath)
 		log.Info("Servicio Iniciado...")
 		for {
 

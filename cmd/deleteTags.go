@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alejbv/SistemaDeFicherosDistribuido/client"
+	"github.com/alejbv/SistemaFicherosRe/client"
 	"github.com/spf13/cobra"
 )
 
