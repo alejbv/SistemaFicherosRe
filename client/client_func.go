@@ -78,12 +78,15 @@ func ClientListFiles(client service.AplicationClient, tags []string) error {
 
 	// Imprimir encabezado de la tabla
 	log.Printf("| %20s | %20s | %20s | %20s | %20s |\n", "Nombre del Archivo", "Extension ", "Tamaño", "Fecha de Subida", "Etiquetas")
-	log.Println("-------------------------------------------------------------------------------------------------")
+	str := "-"
+	repetitions := 100
+	result := strings.Repeat(str, repetitions)
+	log.Println(result)
 	// Imprimir datos de la tabla
 	for _, value := range info {
 		var fileDecod storage.FileEncoding
 		json.Unmarshal(value, &fileDecod)
-		log.Printf("| %20s | %20s | %20d | %20s | %20s |\n", fileDecod.FileName, fileDecod.FileExtension, fileDecod.Size, fileDecod.UploadDate, fileDecod.Tags)
+		log.Printf("| %20s | %20s | %20d | %20s | %20s |\n", fileDecod.FileName, fileDecod.FileExtension, fileDecod.Size, fileDecod.UploadDate, strings.Join(fileDecod.Tags, ","))
 	}
 
 	return nil

@@ -272,7 +272,7 @@ func (apServer *aplicationServer) DeleteTags(ctx context.Context, req *service.D
 	// Variable que va a almacenar los archivos a eliminar
 	var deleteFiles []string
 	// Primero las query
-	tagMaps, fileMaps, err := QueryTags(node, req.QueryTags)
+	_, fileMaps, err := QueryTags(node, req.QueryTags)
 	if err != nil {
 		log.Error("Hubo un error recuperando la informacion" + err.Error())
 		return &service.DeleteTagsResponse{Response: err.Error()}, err
@@ -312,7 +312,7 @@ func (apServer *aplicationServer) DeleteTags(ctx context.Context, req *service.D
 				} else {
 					// Ahora una vez almacenado el archivo actual sin problema es la hora de agregar la informacion
 					// de los archivos que se debe eliminar de las etiquetas
-					deleteFiles = append(deleteFiles, fileKey)
+					deleteFiles = InsertWithOutDuplicates(deleteFiles, []string{fileKey})
 				}
 			}
 
@@ -320,24 +320,19 @@ func (apServer *aplicationServer) DeleteTags(ctx context.Context, req *service.D
 	}
 	// Es necesario eliminar
 	for _, tagsValue := range req.DeleteTags {
+		log.Infof("Etiqueta a eliminar:%s", tagsValue)
 		// Si esta etiqueta esta contenida dentro de los archivos recuperados entonces se eliminan directamente
-		if tagInfo, ok := tagMaps[tagsValue]; ok {
-			deleteMaps[tagsValue] = DeleteElem(tagInfo, deleteFiles)
-			// En otro caso es necesario recuperar la informacion
+		var temp []string
+		// Se recupera la informacion de esa etiqueta
+		value, err := node.GetKey(CreateTagIdentifier(tagsValue))
+		if err != nil {
+			messageResponse += fmt.Sprintf("Hubo un error recuperando la informacion de la etiqueta %s: %s", tagsValue, err.Error())
+			log.Errorf("Hubo un error recuperando la informacion de la etiqueta %s: %s", tagsValue, err.Error())
+			// De no haber error
 		} else {
-			// Variable temporal donde se va a almacenar la informacion a decodificar
-			var temp []string
-			// Se recupera la informacion de esa etiqueta
-			value, err := node.GetKey(CreateTagIdentifier(tagsValue))
-			if err != nil {
-				messageResponse += fmt.Sprintf("Hubo un error recuperando la informacion de la etiqueta %s: %s", tagsValue, err.Error())
-				log.Errorf("Hubo un error recuperando la informacion de la etiqueta %s: %s", tagsValue, err.Error())
-				// De no haber error
-			} else {
-				// Se decodifica la informacion recuperada
-				json.Unmarshal(value, &temp)
-				deleteMaps[tagsValue] = DeleteElem(temp, deleteFiles)
-			}
+			// Se decodifica la informacion recuperada
+			json.Unmarshal(value, &temp)
+			deleteMaps[tagsValue] = DeleteElem(temp, deleteFiles)
 		}
 
 	}

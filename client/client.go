@@ -82,8 +82,6 @@ func NetDiscover(ip net.IP) (string, error) {
 			continue
 		}
 
-		log.Infof("Mensaje de respuesta entrante. %s enviado a: %s", address, buff[:n])
-
 		if string(buff[:n]) == "Yo soy chord" {
 			return strings.Split(address.String(), ":")[0], nil
 		}
@@ -139,7 +137,6 @@ func StartClient() (service.AplicationClient, *grpc.ClientConn, error) {
 
 	//defer conn.Close()
 	client := service.NewAplicationClient(conn)
-	fmt.Printf("El cliente es: %v", client)
 	return client, conn, nil
 
 }

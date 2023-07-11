@@ -3,6 +3,7 @@ package aplication
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	protoChord "github.com/alejbv/SistemaFicherosRe/chord"
@@ -16,6 +17,8 @@ import (
 func ProcessFile(req *service.AddFileRequest) (string, *protoChord.SetRequest) {
 	// Se quiere obtener el tiempo actual para tenerlo en cuenta a la hora de hacer el identificador
 	uploadDate := time.Now().String()
+	temp := strings.Split(uploadDate, " ")
+	uploadDate = temp[0] + " " + temp[1]
 
 	//Se crea el identificador usando la informacion propia del archivo y la fecha de subida al servidor
 	ident := fmt.Sprintf("File.%s%s%s%s%s", req.FileName, req.FileExtension, uploadDate, string(req.BytesSize), string(req.InfoToStorage))
