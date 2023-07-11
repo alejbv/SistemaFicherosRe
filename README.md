@@ -1,5 +1,12 @@
 # Introducción
 
+Un sistema de ficheros basado en etiquetas es un tipo de sistema de ficheros que permite etiquetar o clasificar archivos y directorios de forma más flexible y dinámica que un sistema de ficheros tradicional basado en árbol de directorios.
+
+En un sistema de ficheros basado en etiquetas, cada archivo o directorio puede tener una o varias etiquetas asociadas, que pueden ser palabras clave, categorías, etiquetas de estado, etiquetas de proyecto, etiquetas de contexto, o cualquier otra información que permita clasificar y encontrar los archivos de forma más eficiente. Las etiquetas pueden ser asignadas o modificadas de forma dinámica por el usuario, sin necesidad de mover o copiar los archivos, lo que permite una mayor flexibilidad y organización.
+
+En ellos ademas es mucho mas facil la busqueda y recuperacion de los archivos ya que solo es necesario saber algunas de las etiquetas asociadas a ese archivo en lugar de la ubicacion exacta de este asi como tambien permite una organización más personalizada y adaptable
+
+En este trabajo se desarrollo un sistema de ficheros basado en etiquetas usando el protocolo chord para usando una arquitectura peer-to-peer (P2P) donde cada nodo en la red actua a su ves tanto como cliente y como servidor. Está diseñado para ser escalable y tolerante a fallos permitiendole manejar un mayor trafico sin perder en eficiencia.
 # Instalación
 Este proyecto está completamente desarrollado en go. Si bien no es necesario tener este lenguaje instalados
 si necesario tener instalado Docker y una imagen del Go, sobre la que se construira una imagen de este proyecto para su posterior uso. Ademas este proyecto usa los paquetes:
@@ -20,7 +27,7 @@ Cuando un nodo necesita buscar un objeto, utiliza la función hash para determin
 
 El protocolo Chord es escalable y tolerante a fallos, ya que los nodos pueden unirse y abandonar la red sin afectar significativamente el rendimiento o la disponibilidad del sistema. Además, el protocolo Chord se puede utilizar para implementar una variedad de aplicaciones P2P, como compartir archivos, transmisión de multimedia, y redes sociales descentralizadas, entre otros.
 
-## Tolerancia a Fallos
+# Tolerancia a Fallos
 
 Para garantizar la tolerancia a fallos en Chord, se utilizan dos técnicas principales:
 
@@ -40,7 +47,7 @@ La técnica de estabilización también ayuda a detectar y corregir cualquier in
 
 Otra técnica utilizada en Chord es la "recuperación de fallas", que se utiliza para recuperar los datos y la funcionalidad de los nodos que han fallado. Cuando un nodo falla, los nodos vecinos en la red detectan su ausencia y toman medidas para recuperar los datos y las responsabilidades del nodo fallido.
 
-## Escalabilidad
+# Escalabilidad
 
 El protocolo Chord está diseñado para ser escalable, lo que significa que puede manejar redes distribuidas de gran tamaño y aumentar su capacidad a medida que se agregan nuevos nodos. La escalabilidad en Chord se logra principalmente a través de dos técnicas:
 
@@ -50,11 +57,16 @@ El protocolo Chord está diseñado para ser escalable, lo que significa que pued
 Además de estas técnicas, Chord también utiliza una técnica de "aceleración de arranque" para permitir que los nuevos nodos se unan a la red de manera rápida y eficiente. Cuando un nuevo nodo se une a la red, solicita información sobre el estado actual de la red a un nodo existente y utiliza esta información para construir rápidamente su tabla de enrutamiento.
 
 # Descripcion General
+En este sistema cada nodo actua tanto como cliente asi como servidor. Se utiliza gRPC y TCP para asegurar
+la comunicacion entre todas las partes involucradas. Para interactuar con el sistema se utiliza la linea
+de comandos, y existe dos formas basicas de interactuar con este, se inicializa como servidor con el comando serverStart, una vez echo eso el nodo empieza a buscar en la red local por otro nodo que pertenezca
+al sistema, una vez encontrado empieza el proceso para unirse al anillo chord. De no encontrar ninguno se
+inicializa el como un anillo con un solo elemento. Los nodos interactuan entre ellos usando la capa de transporte para asegurar la estabilidad o buscar recursos que no esten locales.
 
-## Servidor
+En cambio el cliente puede interactuar con el sistema agregando archivos, eliminandolos y recuperando informacion de los archivos usando la interfaz de la linea de comando. Tambien se puede agregar etiquetas o eliminar segun la eleccion del usuario.
 
-## Cliente
-
+En el anillo se almacenan tanto los archivos como las etiquetas. Al subir un archivo se computa su identificador usando sus metadatos(nombre,extension,tamaño) su informacion y la fecha de subida y se almacena en el nodo adecuado todos sus metadatos y la informacion del archivo junto con las etiquetas con
+las que se subio. Las etiquetas en cambio se almancena usando solo *Tags.laetiqueta* y se almacena de la misma forma que los archivos solo que la informacion que almacena es la lista de todos los archivos que tienen a esa etiqueta. Cada vez que un archivo se sube se replica su informacion a su nodo sucesor.
 # CLI
 Usando los github.com/spf13/cobra  y github.com/spf13/viper se fue capaz de desarrollar una interfaz  de línea de comandos para poder usar el proyecto de una manera mas facil. Permitiendo crear un comando por cada una de las funcionalidades que se desea usar. Los comandos son:
 
